@@ -1,0 +1,22 @@
+_target_: av3d.datasets.zju_loader_working.SubjectLoader # regular training and rendering
+# _target_: av3d.datasets.zju_loader_mdm.SubjectLoader # mdm based reposing
+# _target_: av3d.datasets.zju_loader_free_view.SubjectLoader # free view rendering
+
+subject_id: 313
+root_fp: "./data/zju/"
+split: ???  # to be defined in the code
+resize_factor: 0.5 #0.03125
+color_bkgd_aug: "black"
+num_rays: 1024
+cache_n_repeat: 5
+near: null
+far: null
+legacy: true
+bones_23: true
+version: 1
+
+# parameters used by models
+pose_latent_dim: 78
+n_transforms: 19
+world_dist: 0.3
+cano_dist: 0.3

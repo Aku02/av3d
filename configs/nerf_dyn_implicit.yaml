@@ -1,0 +1,104 @@
+# A config for dynamic (articulated) objects.
+
+defaults:
+  - _basic  # inherit configs from _basic.yaml
+  - dataset: zju  # ["zju", "animal"]
+  - pos_enc: smpl  # ["fs", "snarf", "narf"]
+  - engine: trainer_occ_implicit # ["trainer", "evaluator"]
+  - _self_
+
+hydra:
+  output_subdir: null
+  job:
+    name: "fix_neus_normals_sparse"
+    config:
+      override_dirname:
+        # Those keys do not affect the model performance so we
+        # exclude them from the `override_dirname`, that would
+        # affect the saving directory `run.dir`. This means other
+        # than the keys listed here, other keys you set thru
+        # command line would decide which directory to save / load
+        # the model.
+        exclude_keys:
+          - dataset  # already included in the run.dir
+          - pos_enc  # already included in the run.dir
+          - engine
+          - distributed
+          - resume
+          - resume_step
+          - resume_dir
+          - print_every
+          - save_every
+          - test_chunk
+          - eval_every
+          - eval_splits
+          - eval_per_gpu
+          - eval_cache_dir
+          - compute_metrics
+          - dataset.root_fp
+          - dataset.version
+          - dataset.resize_factor
+          - max_steps
+  run:
+    # set the saving / loading directory
+    dir: "outputs/\
+      ${hydra.job.name}/\
+      ${hydra.runtime.choices.dataset}/\
+      ${dataset.subject_id}/\
+      ${hydra.runtime.choices.pos_enc}/\
+      cfg=${hydra.job.override_dirname}/\
+      "
+
+# set the dataset split.
+eval_splits: ["test"] #["test"]
+train_split: "all"
+
+# set the losses.
+loss_coarse_mult: 1.0
+loss_bone_w_mult: 0.0
+loss_bone_offset_mult: 0.0
+loss_bone_occ_multi: 0.0
+loss_tv_multi: 0.0
+
+# set the model.
+model:
+  _target_: av3d.models.ngp_kplanes_implicit.DynNerfModel
+  pos_enc: ${pos_enc}
+  geometry_type: "implicit-sdf"
+  geometry:
+    radius: 1.0
+    n_feature_dims: 3
+    isosurface_resolution: 128
+    isosurface_deformable_grid: false
+    isosurface_coarse_to_fine: false
+
+    # initialize SDF by optimization
+    shape_init: "ellipsoid"
+    shape_init_params: [1.5, 1.5, 1.5]
+
+  variance:
+    params_init: {beta: 0.1}
+    beta_min: 0.0001
+  shading_pose_dim: ${dataset.pose_latent_dim}
+  world_dist: ${dataset.world_dist}
+  num_levels: 2
+  coarse_sample_with_fine: true
+  num_samples_coarse: 64
+  num_samples_fine: 128
+  # Model settings
+  concat_features_across_scales: true
+  multiscale_res: [1] #[1,2,4,8]
+  density_activation: trunc_exp
+  linear_decoder: false
+  linear_decoder_layers: 4
+  use_ao: True
+  use_direction: false
+  grid_config: 
+    grid_dimensions: 2
+    input_coordinate_dim: 3
+    output_coordinate_dim: 32
+    resolution: [64,64,64] 
+  
+pos_enc:
+  posi_enc:
+    _target_: av3d.models.basic.posi_enc.PositionalEncoder

@@ -1,0 +1,7 @@
+'male-3-casual':
+  test:
+  - test
+  train:
+  - train
+  val:
+  - test

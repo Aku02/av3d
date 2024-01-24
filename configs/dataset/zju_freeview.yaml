@@ -1,0 +1,19 @@
+_target_: av3d.datasets.zju_loader_free_view.SubjectLoader
+
+subject_id: 313
+root_fp: "./data/zju/"
+split: ???  # to be defined in the code
+resize_factor: 0.5
+color_bkgd_aug: "black"
+num_rays: 1024
+cache_n_repeat: 5
+near: null
+far: null
+legacy: true
+bones_23: true
+
+# parameters used by models
+pose_latent_dim: 78
+n_transforms: 19
+world_dist: 0.3
+cano_dist: 0.3 #2

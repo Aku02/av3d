@@ -1,0 +1,21 @@
+system:
+  guidance_type: "stable-diffusion-controlnet-guidance"
+  guidance:
+    control_type: "normal"
+    min_step_percent: 0.005
+    max_step_percent: 0.08
+    use_du: true
+    cache_du: true
+    use_sds: false
+
+  prompt_processor_type: "stable-diffusion-prompt-processor"
+  prompt_processor:
+    pretrained_model_name_or_path: "SG161222/Realistic_Vision_V2.0"
+    # prompt: ""
+    # negative_prompt: ""
+    prompt: "retain the same color, get a realistic image"
+    # prompt: "Adjust the color grade and saturation of the shirt worn by the individual in the given image to a white shirt. Ensure that the texture, lighting, and all other elements of the original image are preserved intact. The goal is to seamlessly integrate the color modification without affecting the remaining aspects of the image."
+    # prompt: "Alter the color of the shirt to red color, retain all other aspects of the image intact."
+    # negative_prompt: "change pixel color to random color other than red"
+    negative_prompt: "change pixel color to random color other than green"
+    # negative_prompt: "(Alter the color of the shirt to a random color other than red, or make global changes to the image that affect areas outside the shirt. Distortion of texture, lighting, or other elements of the original image, or failing to make the shirt appear naturally red within the context of the image, is not acceptable.)"

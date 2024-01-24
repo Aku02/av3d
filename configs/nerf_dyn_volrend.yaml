@@ -1,0 +1,136 @@
+# A config for dynamic (articulated) objects.
+
+defaults:
+  - _basic  # inherit configs from _basic.yaml
+  - dataset: zju_backup  # ["zju", "animal"]
+  - pos_enc: smpl  # ["snarf", "narf"]
+  - engine: trainer_occ_implicit # ["trainer", "evaluator"]
+  - _self_
+
+hydra:
+  output_subdir: null
+  job:
+    name: "fix_neus_cdf"
+    config:
+      override_dirname:
+        # Those keys do not affect the model performance so we
+        # exclude them from the `override_dirname`, that would
+        # affect the saving directory `run.dir`. This means other
+        # than the keys listed here, other keys you set thru
+        # command line would decide which directory to save / load
+        # the model.
+        exclude_keys:
+          - dataset  # already included in the run.dir
+          - pos_enc  # already included in the run.dir
+          - engine
+          - distributed
+          - resume
+          - resume_step
+          - resume_dir
+          - print_every
+          - save_every
+          - test_chunk
+          - eval_every
+          - eval_splits
+          - eval_per_gpu
+          - eval_cache_dir
+          - compute_metrics
+          - dataset.root_fp
+          - dataset.version
+          - dataset.resize_factor
+          - max_steps
+  run:
+    # set the saving / loading directory
+    dir: "outputs/\
+      ${hydra.job.name}/\
+      ${hydra.runtime.choices.dataset}/\
+      ${dataset.subject_id}/\
+      ${hydra.runtime.choices.pos_enc}/\
+      cfg=${hydra.job.override_dirname}/\
+      "
+
+# set the dataset split.
+eval_splits: ["test"] #["test"]
+train_split: "train"
+
+# set the losses.
+loss_coarse_mult: 1.0
+loss_bone_w_mult: 0.0
+loss_bone_offset_mult: 0.0
+loss_bone_occ_multi: 0.0
+loss_tv_multi: 0.0
+
+# set the model.
+model:
+  _target_: av3d.models.ngp_kplanes_volrend.DynNerfModel
+  pos_enc: ${pos_enc}
+  geometry_type: "implicit-sdf"
+  geometry:
+    radius: 1.0
+    n_feature_dims: 3
+    isosurface_resolution: 128
+    isosurface_deformable_grid: false
+    isosurface_coarse_to_fine: false
+
+    # initialize SDF by optimization
+    shape_init: "ellipsoid"
+    # shape_init: mesh:av3d/av3d/models/projection/t_can_fs.obj
+    shape_init_params: [1.5, 1.5, 1.5]
+    # sdf_bias: ellipsoid
+    # sdf_bias_params: [1.5, 1.5, 1.5]
+  # variance:
+  #   init_val: 0.3
+  #   modulate: false
+  variance:
+    params_init: {beta: 0.1}
+    beta_min: 0.0001
+  #########################################################
+  # geometry_type: "tetrahedra-sdf-grid"
+  # geometry:
+  #   radius: 2.0 # consistent with coarse
+  #   isosurface_resolution: 128
+  #   isosurface_deformable_grid: true
+  #   isosurface_outlier_n_faces_threshold: 0.01
+  #   pos_encoding_config: # consistent with coarse, no progressive band
+  #     otype: HashGrid
+  #     n_levels: 16
+  #     n_features_per_level: 2
+  #     log2_hashmap_size: 19
+  #     base_resolution: 16
+  #     per_level_scale: 1.4472692374403782 # max resolution 4096
+  #   mlp_network_config:
+  #     otype: "VanillaMLP"
+  #     activation: "ReLU"
+  #     output_activation: "none"
+  #     n_neurons: 64
+  #     n_hidden_layers: 2
+  #   fix_geometry: false # optimize grid sdf and deformation
+  ########################################################
+  # shading_mode: None
+  shading_pose_dim: ${dataset.pose_latent_dim}
+  world_dist: ${dataset.world_dist}
+  num_levels: 2
+  coarse_sample_with_fine: true
+  num_samples_coarse: 64
+  num_samples_fine: 128
+  # Model settings
+  concat_features_across_scales: true
+  multiscale_res: [1] #[1,2,4,8]
+  density_activation: trunc_exp
+  linear_decoder: false
+  linear_decoder_layers: 4
+  use_ao: True
+  use_direction: false
+  # Use time reso = half the number of frames
+  # Lego: 25 (50 frames)
+  # Hell Warrior and Hook: 50 (100 frames)
+  # Mutant, Bouncing Balls, and Stand Up: 75 (150 frames)
+  grid_config: 
+    grid_dimensions: 2
+    input_coordinate_dim: 3
+    output_coordinate_dim: 32
+    resolution: [64,64,64]
+  
+pos_enc:
+  posi_enc:
+    _target_: av3d.models.basic.posi_enc.PositionalEncoder

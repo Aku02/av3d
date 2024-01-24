@@ -1,0 +1,2 @@
+# _target_: av3d.engines.trainer_occ.Trainer
+_target_: av3d.engines.trainer_occ_implicit.Trainer

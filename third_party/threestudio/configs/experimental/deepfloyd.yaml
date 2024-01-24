@@ -1,0 +1,19 @@
+system:
+  guidance_type: "deep-floyd-guidance"
+  guidance:
+    pretrained_model_name_or_path: "DeepFloyd/IF-I-XL-v1.0"
+    guidance_scale: 20.
+    weighting_strategy: sds
+    min_step_percent: 0.02
+    max_step_percent: 0.98
+
+    #(YK): new config
+    use_du: True
+    start_du_step: 0
+    du_diffusion_steps: 100
+    per_du_step: 100
+    cache_du: False
+  prompt_processor_type: "deep-floyd-prompt-processor"
+  prompt_processor:
+    pretrained_model_name_or_path: "DeepFloyd/IF-I-XL-v1.0"
+    prompt: "retain the image, DSLR quality"

@@ -1,0 +1,35 @@
+_target_: av3d.lib.model.fast_smpl.ForwardDeformer
+posi_enc:
+    _target_: av3d.models.basic.posi_enc.IntegratedPositionalEncoder
+opt:
+    align_corners: true
+    skinning_mode: mlp
+    use_slow_grad: false
+    res: 64
+    z_ratio: 1
+    softmax_mode: softmax
+    global_scale: 1.2
+    soft_blend: 20
+    cvg: 1e-4
+    dvg: 5e-1
+    lambda_bone_w: 1
+    network:
+      d_in: 3
+      d_out: 24
+      depth: 4
+      width: 128
+      multires: 0
+      skip_layer: []
+      cond_layer: []
+      dim_cond_embed: 0
+      weight_norm: true
+      geometric_init: false
+      bias: 1
+
+# posi_enc:
+#   _target_: av3d.models.basic.posi_enc.IntegratedPositionalEncoder
+n_transforms: ${dataset.n_transforms}
+offset_net_enabled: true
+offset_pose_dim: ${dataset.pose_latent_dim}
+offset_constant_zero: false
+cano_dist: ${dataset.cano_dist}

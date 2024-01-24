@@ -1,0 +1,5 @@
+_target_: av3d.models.deform_posi_enc.rigid.DisentangledDPEncoder
+
+posi_enc:
+  _target_: av3d.models.basic.posi_enc.IntegratedPositionalEncoder
+n_transforms: ${dataset.n_transforms}

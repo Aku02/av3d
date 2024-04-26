@@ -22,6 +22,7 @@ import trimesh
 from av3d.lib.model.helpers import masked_softmax, tv_loss
 from scipy.spatial.transform import Rotation as R
 from torch import einsum
+from av3d.models.projection.map import SurfaceAlignedConverter
 from av3d.models.projection.map_utils import point_mesh_face_distance
 
 from pytorch3d.structures import Meshes, Pointclouds
@@ -85,7 +86,7 @@ class ForwardDeformer(torch.nn.Module):
         self.init_bones_cuda = torch.tensor(self.init_bones).cuda().int()
 
         # convert to voxel grid
-        meta_info = np.load('av3d_release/av3d/meta.npy', allow_pickle=True)
+        meta_info = np.load('av3d/meta.npy', allow_pickle=True)
         meta_info_1 = np.load('av3d/data/zju/CoreView_313/lbs/smpl_params.npy', allow_pickle=True).item()
         meta_info = meta_info.item()
         gender = str(meta_info['gender'])
@@ -112,10 +113,12 @@ class ForwardDeformer(torch.nn.Module):
         if self.opt.skinning_mode == 'preset':
             self.lbs_voxel_final = query_weights_smpl(self.grid_denorm, smpl_verts, self.smpl_server.weights_c)
             self.lbs_voxel_final = self.lbs_voxel_final.permute(0,2,1).reshape(1,-1,d,h,w) 
+            self.sa = SurfaceAlignedConverter()
            
         elif self.opt.skinning_mode == 'voxel':
             lbs_voxel = 0.001 * torch.ones((1, self.ret, d, h, w), dtype=self.grid_denorm.dtype, device=self.grid_denorm.device)
             self.register_parameter('lbs_voxel', torch.nn.Parameter(lbs_voxel,requires_grad=True))
+            self.sa = SurfaceAlignedConverter()  
             scaling_factor = 1
             # faces = self.sa.faces_idx[None, ...].repeat(len(self.sa.verts), 1, 1)
             meshes = Meshes(verts=self.sa.verts.float().unsqueeze(0)*scaling_factor, faces=self.sa.faces_idx.unsqueeze(0))
@@ -132,7 +135,8 @@ class ForwardDeformer(torch.nn.Module):
             self.lbs_network = ImplicitNetwork(**self.opt.network, d_out = self.ret)#, d_in = self.inp_posi_enc.out_dim)
             
             if self.offset_net_enabled:
-                self.offset_net = _OffsetsNet(offset_pose_dim)       
+                self.offset_net = _OffsetsNet(offset_pose_dim)
+            self.sa = SurfaceAlignedConverter()       
             
         else:
             raise NotImplementedError('Unsupported Deformer.')
